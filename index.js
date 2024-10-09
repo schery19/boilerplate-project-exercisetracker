@@ -116,11 +116,56 @@ app.get('/api/users', (req, res) => {
 app.post('/api/users/:_id/exercises', (req, res) => {
   console.log(req.body);
 
-  var user;
 
-  User.find
+  User.findById(req.params._id, (err, user) => {
+    if (err) {
+      console.error('Error retrieving users:', err);
+      return res.status(500).json({ error: 'Error retrieving user with id ' });
+    }
+  
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' }); 
+    }
+  
+    let date;
 
-  if(req.body.date = '')
+    if (req.body.date === '') {
+      date = new Date().toDateString(); 
+    } else {
+      date = new Date(req.body.date).toDateString(); 
+    }
+  
+    const newExo = {
+      username: user.username,
+      description: req.body.description,
+      duration: req.body.duration,
+      date: date
+    };
+  
+    
+    saveExo(newExo, (err, dataSaved) => {
+      if (err) {
+        console.error('Error saving exercise:', err);
+        return res.status(500).json({ error: 'Error saving exercise' });
+      }
+  
+      
+      const response = dataSaved.toObject();
+      delete response._id;
+      delete response.__v;
+
+
+      user.Exercise = user.Exercise || [];
+
+      user.Exercise.push(dataSaved);
+
+  
+      res.json(user);
+    });
+
+  });
+
+  
 });
 
 
