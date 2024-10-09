@@ -58,7 +58,7 @@ const saveUser = (userData, done) => {
 
 const saveExo = (exoData, done) => {
 
-  let exoToSave = new Exercise(userData);
+  let exoToSave = new Exercise(exoData);
 
   exoToSave.save((err, dataSaved) => {
     if(err) return console.log(err);
@@ -97,10 +97,10 @@ app.post('/api/users', (req, res) => {
     if(err) console.error(err);
 
     res.json(newUser);
-  })
+  });
 
 
-})
+});
 
 
 app.get('/api/users', (req, res) => {
@@ -109,7 +109,19 @@ app.get('/api/users', (req, res) => {
 
     res.json(users)
   });
-})
+
+});
+
+
+app.post('/api/users/:_id/exercises', (req, res) => {
+  console.log(req.body);
+
+  var user;
+
+  User.find
+
+  if(req.body.date = '')
+});
 
 
 
