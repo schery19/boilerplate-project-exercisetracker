@@ -113,6 +113,36 @@ app.get('/api/users', (req, res) => {
 });
 
 
+app.get('/api/users/:_id/logs', async (req, res) => {
+  const user = await User.findById(req.params._id);
+
+  // console.log(user)
+
+  if(!user)
+    return res.status(404).json({ error: 'User not found' }); 
+
+  const exos = await Exercise.find({username: user.username});
+
+
+  const logs = exos.map(log => ({
+    description: log.description,
+    duration: log.duration,
+    date: new Date(log.date).toDateString()  // Format the date as a string
+  }));
+  
+
+  res.json({
+    username: user.username,
+    count: exos.length,
+    _id: user._id,
+    log: logs
+  });
+
+  console.log(exos);
+
+});
+
+
 app.post('/api/users/:_id/exercises', (req, res) => {
   console.log(req.body);
 
@@ -148,25 +178,26 @@ app.post('/api/users/:_id/exercises', (req, res) => {
         console.error('Error saving exercise:', err);
         return res.status(500).json({ error: 'Error saving exercise' });
       }
-  
-      
-      const response = dataSaved.toObject();
-      delete response._id;
-      delete response.__v;
 
-
-      user.Exercise = user.Exercise || [];
-
-      user.Exercise.push(dataSaved);
+      let userArray = {
+        "_id": user._id,
+        "username": user.username,
+        "description": dataSaved.description,
+        "duration": dataSaved.duration,
+        "date": dataSaved.date
+      };
 
   
-      res.json(user);
+      res.json(userArray);
     });
 
   });
 
   
 });
+
+
+
 
 
 
