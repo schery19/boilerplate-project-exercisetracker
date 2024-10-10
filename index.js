@@ -16,7 +16,7 @@ let mongoClient = mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: tru
 
 
 const exerciseSchema = new mongoose.Schema({
-  username: { type: String, required: true },
+  user_id: { type: String, required: true },
   description: { type: String },
   duration: Number,
   date: { type: String, required: true }
@@ -96,6 +96,8 @@ app.post('/api/users', (req, res) => {
   saveUser({username: req.body.username}, (err, newUser) => {
     if(err) console.error(err);
 
+    console.log("User registered : "+ newUser);
+
     res.json(newUser);
   });
 
@@ -116,29 +118,57 @@ app.get('/api/users', (req, res) => {
 app.get('/api/users/:_id/logs', async (req, res) => {
   const user = await User.findById(req.params._id);
 
-  // console.log(user)
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
 
-  if(!user)
-    return res.status(404).json({ error: 'User not found' }); 
+  let query = { user_id: req.params._id };
 
-  const exos = await Exercise.find({username: user.username});
+  // Créer un objet de filtre pour les dates
+  let dateFilter = {};
 
+  if (req.query.from) {
+    const fromDate = new Date(req.query.from);
+    if (fromDate.toString() !== 'Invalid Date') {
+      dateFilter.$gte = fromDate.toISOString().split('T')[0];
+    }
+  }
 
-  const logs = exos.map(log => ({
-    description: log.description,
-    duration: log.duration,
-    date: new Date(log.date).toDateString()  // Format the date as a string
+  if (req.query.to) {
+    const toDate = new Date(req.query.to);
+    if (toDate.toString() !== 'Invalid Date') {
+      dateFilter.$lte = toDate.toISOString().split('T')[0];
+    }
+  }
+
+  // Si des filtres de date existent, les ajouter à la requête
+  if (Object.keys(dateFilter).length > 0) {
+    query.date = dateFilter;
+  }
+
+  // Gérer la limite
+  const limit = parseInt(req.query.limit) || 50;
+
+  // Récupérer les exercices avec la limite et le filtre
+  const exos = await Exercise.find(query).limit(limit);
+
+  // Formatage des logs avec les dates au format 'toDateString'
+  const logs = exos.map(exo => ({
+    description: exo.description,
+    duration: exo.duration,
+    date: new Date(exo.date).toDateString()
   }));
-  
 
+  console.log(req.query);
+  console.log(query);
+
+  // Retourner la réponse JSON
   res.json({
     username: user.username,
-    count: exos.length,
+    count: logs.length,
     _id: user._id,
     log: logs
   });
-
-  console.log(exos);
 
 });
 
@@ -157,16 +187,16 @@ app.post('/api/users/:_id/exercises', (req, res) => {
       return res.status(404).json({ error: 'User not found' }); 
     }
   
-    let date;
+    let date = req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString();
 
-    if (req.body.date === '') {
-      date = new Date().toDateString(); 
-    } else {
-      date = new Date(req.body.date).toDateString(); 
-    }
+    // if (req.body.date === '') {
+    //   date = new Date(); 
+    // } else {
+    //   date = new Date(req.body.date).toDateString(); 
+    // }
   
     const newExo = {
-      username: user.username,
+      user_id: user._id,
       description: req.body.description,
       duration: req.body.duration,
       date: date
