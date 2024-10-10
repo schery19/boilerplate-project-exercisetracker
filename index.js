@@ -129,16 +129,16 @@ app.get('/api/users/:_id/logs', async (req, res) => {
 
   if (req.query.from) {
     const fromDate = new Date(req.query.from);
-    if (fromDate.toString() !== 'Invalid Date') {
-      dateFilter.$gte = fromDate.toISOString().split('T')[0];
-    }
+    
+    dateFilter.$gte = fromDate.toISOString().split('T')[0];
+    
   }
 
   if (req.query.to) {
     const toDate = new Date(req.query.to);
-    if (toDate.toString() !== 'Invalid Date') {
-      dateFilter.$lte = toDate.toISOString().split('T')[0];
-    }
+    
+    dateFilter.$lte = toDate.toISOString().split('T')[0];
+    
   }
 
 
@@ -187,7 +187,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
       return res.status(404).json({ error: 'User not found' }); 
     }
   
-    let date = req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString();
+    let date = req.body.date ? new Date(req.body.date).toISOString() : new Date().toISOString();
 
     // if (req.body.date === '') {
     //   date = new Date(); 
@@ -209,12 +209,14 @@ app.post('/api/users/:_id/exercises', (req, res) => {
         return res.status(500).json({ error: 'Error saving exercise' });
       }
 
+      console.log("type date :"+dataSaved.date)
+
       let userArray = {
         "_id": user._id,
         "username": user.username,
         "description": dataSaved.description,
         "duration": dataSaved.duration,
-        "date": dataSaved.date
+        "date": new Date(dataSaved.date).toDateString()
       };
 
   
