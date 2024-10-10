@@ -124,7 +124,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
 
   let query = { user_id: req.params._id };
 
-  // Créer un objet de filtre pour les dates
+
   let dateFilter = {};
 
   if (req.query.from) {
@@ -141,18 +141,18 @@ app.get('/api/users/:_id/logs', async (req, res) => {
     }
   }
 
-  // Si des filtres de date existent, les ajouter à la requête
+
   if (Object.keys(dateFilter).length > 0) {
     query.date = dateFilter;
   }
 
-  // Gérer la limite
+
   const limit = parseInt(req.query.limit) || 50;
 
-  // Récupérer les exercices avec la limite et le filtre
+
   const exos = await Exercise.find(query).limit(limit);
 
-  // Formatage des logs avec les dates au format 'toDateString'
+
   const logs = exos.map(exo => ({
     description: exo.description,
     duration: exo.duration,
@@ -162,7 +162,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
   console.log(req.query);
   console.log(query);
 
-  // Retourner la réponse JSON
+
   res.json({
     username: user.username,
     count: logs.length,
